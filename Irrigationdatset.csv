@@ -1,4 +1,4 @@
-crop ID,soil_type,Seedling Stage,Moisture,Temperature,Humidity,Rainfall,Result
+crop,soil_type,Seedling Stage,Moisture,Temperature,Humidity,Rainfall,Result
 Wheat,Black Soil,Germination,1,25,80,0,1
 Wheat,Black Soil,Germination,2,26,77,2.68,1
 Wheat,Black Soil,Germination,3,27,74,7.07,1
