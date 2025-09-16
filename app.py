@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-# Load pre-trained model
+#pre-trained model
 model_file = 'decision_tree_model.pkl'
 if not os.path.exists(model_file):
     print("Error: Model file not found. Please run train_model.py first.")

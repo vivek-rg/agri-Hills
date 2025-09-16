@@ -9,7 +9,7 @@ import pickle
 #load dataset
 df = pd.read_csv("Irrigationdatset.csv")
 
-# encoding categorical columns
+#encoding categorical
 le_crop = LabelEncoder()
 le_soil = LabelEncoder()
 le_stage = LabelEncoder()
@@ -18,25 +18,25 @@ df['crop'] = le_crop.fit_transform(df['crop'])
 df['soil_type'] = le_soil.fit_transform(df['soil_type'])
 df['Seedling Stage'] = le_stage.fit_transform(df['Seedling Stage'])
 
-# features and target
+
 X = df.drop('Result', axis=1)
 y = df['Result']
 
-# train-test split
+#train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-#  decision Tree Classifier
+#decision Tree Classifier
 model = DecisionTreeClassifier(criterion='entropy', random_state=0)
 model.fit(X_train, y_train)
 
-#  accuracy
+#accuracy
 y_pred = model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Model Accuracy: {accuracy:.4f}")
 
 
 
-# Save model to .pkl file
+#.pkl file
 with open('decision_tree_model.pkl', 'wb') as file:
     pickle.dump(model, file)
 
