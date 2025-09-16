@@ -1,56 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Result</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-            margin: 40px;
+            background: url("{{ url_for('static', filename='img.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
         }
 
-        h2 {
-            text-align: center;
-            color: #333;
+        .overlay {
+            background: rgba(0, 0, 0, 0.5);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .result-container {
-            background-color: #fff;
-            max-width: 500px;
+            background-color: rgba(255, 255, 255, 0.95);
+            max-width: 600px;
+            width: 90%;
             margin: auto;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             text-align: center;
         }
 
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
         .prediction {
-            font-size: 24px;
-            color: #4CAF50;
-            margin: 20px 0;
+            font-size: 22px;
+            margin: 15px 0;
             font-weight: bold;
+        }
+
+        .prediction.green {
+            color: #28a745;
+        }
+
+        .prediction.red {
+            color: #dc3545;
+        }
+
+        .rainfall {
+            font-size: 18px;
+            margin-top: 10px;
+            color: #007bff;
+        }
+
+        .forecast {
+            font-size: 18px;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .forecast.yes {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        .forecast.no {
+            color: #721c24;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
         }
 
         a {
             display: inline-block;
             margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #4CAF50;
+            padding: 10px 25px;
+            background-color: #28a745;
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 6px;
+            transition: 0.3s;
         }
 
         a:hover {
-            background-color: #45a049;
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
-    <div class="result-container">
-        <h2>Crop Growth Prediction Result</h2>
-        <div class="prediction">{{ prediction }}</div>
-        <a href="/">Go Back</a>
+    <div class="overlay">
+        <div class="result-container">
+            <h2>🌱 Crop Irrigation Result</h2>
+
+            {% if prediction == 0 %}
+                <div class="prediction green">✅ No need to irrigate. The soil has enough moisture.</div>
+                <p>💡 Farmers are advised to conserve water and avoid unnecessary motor usage.</p>
+            {% else %}
+                <div class="prediction red">🚰 Irrigation Needed! Please switch on the motor.</div>
+                <p>💡 Ensure crops receive sufficient water for better yield.</p>
+            {% endif %}
+
+            <div class="rainfall">🌧️ Predicted Rainfall Today: <b>{{ rainfall }} mm</b></div>
+
+            {% if rain_forecast %}
+                <div class="forecast yes">🌦️ Rain is expected in the next 3 hours. Plan irrigation accordingly.</div>
+            {% else %}
+                <div class="forecast no">☀️ No rain expected in the next 3 hours.</div>
+            {% endif %}
+
+            <a href="/">🔙 Go Back</a>
+        </div>
     </div>
 </body>
 </html>

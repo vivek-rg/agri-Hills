@@ -1,107 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crop Growth Prediction</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-            margin: 40px;
-        }
-
-        h2 {
-            text-align: center;
-            color: #333;
-        }
-
-        form {
-            background-color: #fff;
-            max-width: 500px;
-            margin: auto;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-
-        select, input[type="number"], input[type="submit"] {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
+        body {
+            
+             background: url("{{ url_for('static', filename='img.jpg') }}") no-repeat center center fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 30px;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
         }
-
-        input[type="submit"]:hover {
-            background-color: #45a049;
-        }
-
-        a {
-            display: block;
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
             text-align: center;
-            margin-top: 20px;
-            text-decoration: none;
-            color: #333;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px 25px;
+            border-radius: 12px;
+        }
+        h2 {
+            margin: 25px 0 15px;
+            text-align: center;
+            font-size: 1.8rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        .section {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        form, .section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+        button, input[type="submit"] {
+            background: #28a745;
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover, input[type="submit"]:hover {
+            background: #218838;
+        }
+        #weather-details {
+            margin-top: 15px;
+        }
+        .hidden {
+            display: none;
+        }
+        form {
+            background: rgba(0, 0, 0, 0.55);
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 100%;
         }
     </style>
 </head>
-<body>
+<body >
+    
+    <h1>Agriculture Irrigation Advisor</h1>
+    <div class="section">
+        <label for="location">Enter Location (City Name):</label>
+        <input type="text" id="location" placeholder="e.g., London" />
+        <button onclick="getWeather()">Get Weather</button>
+
+        <div id="weather-details" class="hidden">
+            <h3>Weather Information</h3>
+            <div id="weather-info"></div>
+        </div>
+    </div>
+
     <h2>Crop Growth Prediction</h2>
-    <form action="/predict" method="POST">
+   <form action="/predict" method="POST">
 
-        <label for="crop_id">Crop ID:</label>
-        <select id="crop_id" name="crop_id" required>
-            <option value="0">Wheat</option>
-            <option value="1">Rice</option>
-            <option value="2">Maize</option>
-            <option value="3">Barley</option>
-            <!-- Add more options if needed -->
-        </select>
+    <label for="crop_id">Crop ID:</label>
+    <select id="crop_id" name="crop_id" required>
+        <option value="0">CARROT</option>
+        <option value="1">CHILLI</option>
+        <option value="2">POTATO</option>
+        <option value="3">TOMATO</option>
+        <option value="4">WHEAT</option>
+    </select>
 
-        <label for="soil_type">Soil Type:</label>
-        <select id="soil_type" name="soil_type" required>
-            <option value="0">Loamy</option>
-            <option value="1">Sandy</option>
-            <option value="2">Clayey</option>
-            <option value="3">Peaty</option>
-            <!-- Add more options if needed -->
-        </select>
+    <label for="soil_type">Soil Type:</label>
+    <select id="soil_type" name="soil_type" required>
+        <option value="0">Alluvial Soil</option>
+        <option value="1">Black Soil</option>
+        <option value="2">Chalky Soil</option>
+        <option value="3">Clay Soil</option>
+        <option value="4">Loam Soil</option>
+        <option value="5">Red Soil</option>
+        <option value="6">Sandy Soil</option>
+    </select>
 
-        <label for="seedling_stage">Seedling Stage:</label>
-        <select id="seedling_stage" name="seedling_stage" required>
-            <option value="0">Initial Stage</option>
-            <option value="1">Mid Stage</option>
-            <option value="2">Final Stage</option>
-            <!-- Add more options if needed -->
-        </select>
+    <label for="seedling_stage">Seedling Stage:</label>
+    <select id="seedling_stage" name="seedling_stage" required>
+        <option value="0">Flowering</option>
+        <option value="1">Fruit/Grain/Bulb Formation</option>
+        <option value="2">Germination</option>
+        <option value="3">Harvest</option>
+        <option value="4">Maturation</option>
+    </select>
 
-        <label for="moisture">Moisture (integer):</label>
-        <input type="number" id="moisture" name="moisture" min="0" required>
+    <label for="moisture">Moisture (integer):</label>
+    <input type="number" id="moisture" name="moisture" min="0" required>
 
-        <label for="temperature">Temperature (°C):</label>
-        <input type="number" id="temperature" name="temperature" step="0.1" required>
+    <label for="temperature">Temperature (°C):</label>
+    <input type="number" id="temperature" name="temperature" step="0.1" required>
 
-        <label for="humidity">Humidity (%):</label>
-        <input type="number" id="humidity" name="humidity" step="0.1" required>
+    <label for="humidity">Humidity (%):</label>
+    <input type="number" id="humidity" name="humidity" step="0.1" required>
 
-        <label for="rainfall">Rainfall (mm):</label>
-        <input type="number" id="rainfall" name="rainfall" step="0.1" required>
+    
+    <input type="hidden" id="rainfall" name="rainfall">
 
-        <input type="submit" value="Predict">
-    </form>
+    <input type="submit" value="Predict">
+</form>
+
+
+    <script>
+    const apiKey = 'f4ccd28ceb577a556911dfd947e0ab84';  
+
+    function getWeather() {
+        const location = document.getElementById('location').value;
+        if (!location) return alert('Please enter a location.');
+
+        fetch(`https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&units=metric`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('City not found or API error');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Default rainfall
+                let rainfall = 0;
+                if (data.rain) {
+                    if (data.rain['1h']) {
+                        rainfall = data.rain['1h'];
+                    } else if (data.rain['3h']) {
+                        rainfall = data.rain['3h'];
+                    }
+                }
+
+            
+                const weatherInfo = `
+                    Temperature: ${data.main.temp} °C<br>
+                    Humidity: ${data.main.humidity}%<br>
+                    Weather: ${data.weather[0].description}<br>
+                    Rainfall: ${rainfall} mm
+                `;
+                document.getElementById('weather-info').innerHTML = weatherInfo;
+                document.getElementById('weather-details').classList.remove('hidden');
+
+                // Store rainfall in hidden input
+                document.getElementById('rainfall').value = rainfall;
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to fetch weather data. Please check the location.');
+            });
+    }
+</script>
+
 </body>
 </html>
