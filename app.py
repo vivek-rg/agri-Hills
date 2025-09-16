@@ -32,7 +32,7 @@ def predict():
 
     prediction = model.predict(sample_input)[0]
 
-    return f"<h2>Predicted Result: {prediction}</h2><a href='/'>Go Back</a>"
+    return render_template('result.html', prediction=prediction)
 
 if __name__ == '__main__':
     print("Flask app running on http://127.0.0.1:5000/")

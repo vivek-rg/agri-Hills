@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 40px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .result-container {
+            background-color: #fff;
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .prediction {
+            font-size: 24px;
+            color: #4CAF50;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        a:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-container">
+        <h2>Crop Growth Prediction Result</h2>
+        <div class="prediction">{{ prediction }}</div>
+        <a href="/">Go Back</a>
+    </div>
+</body>
+</html>

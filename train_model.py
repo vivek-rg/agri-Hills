@@ -34,6 +34,8 @@ y_pred = model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Model Accuracy: {accuracy:.4f}")
 
+
+
 # Save model to .pkl file
 with open('decision_tree_model.pkl', 'wb') as file:
     pickle.dump(model, file)
