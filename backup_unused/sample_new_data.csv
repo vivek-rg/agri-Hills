@@ -1,0 +1,9 @@
+crop,soil_type,Seedling Stage,moisture,temperature,humidity,rainfall,Result
+Rice,Clay,Early,45,25.5,70,5.2,Irrigate
+Wheat,Sandy,Mid,60,28.0,65,0.0,No Irrigation
+Corn,Loamy,Late,30,22.0,80,12.5,Irrigate
+Tomato,Clay,Early,55,30.0,60,2.1,No Irrigation
+Potato,Sandy,Mid,40,26.5,75,8.0,Irrigate
+Rice,Loamy,Late,65,27.5,68,0.5,No Irrigation
+Wheat,Clay,Early,50,24.0,72,15.0,Irrigate
+Corn,Sandy,Mid,35,29.0,63,1.2,No Irrigation

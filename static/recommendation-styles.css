@@ -1,0 +1,35 @@
+.recommendation-message {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+.recommendation-message.success {
+    background-color: rgba(0, 200, 0, 0.1);
+    color: #0a0;
+    border: 1px solid #0a0;
+}
+
+.recommendation-message.warning {
+    background-color: rgba(255, 150, 0, 0.1);
+    color: #f90;
+    border: 1px solid #f90;
+}
+
+.recommendation-message.error {
+    background-color: rgba(255, 0, 0, 0.1);
+    color: #e00;
+    border: 1px solid #e00;
+}
+
+.recommendation-message.info {
+    background-color: rgba(0, 120, 255, 0.1);
+    color: #08f;
+    border: 1px solid #08f;
+}
+
+.info-message {
+    text-align: center;
+    color: #666;
+    padding: 1rem;
+}

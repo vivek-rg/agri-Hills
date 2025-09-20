@@ -3,203 +3,1118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crop Growth Prediction</title>
+    <title>AgroTech - Smart Irrigation Dashboard</title>
+    <meta name="description" content="Professional IoT-powered agriculture irrigation advisor with real-time monitoring and smart recommendations.">
+    
+    <!-- SEO Meta Tags -->
+    <meta property="og:title" content="AgroTech - Smart Irrigation Dashboard">
+    <meta property="og:description" content="Professional IoT-powered agriculture irrigation advisor with real-time monitoring.">
+    <meta property="og:type" content="website">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="{{ url_for('static', filename='recommendation.js') }}"></script>
+    <script src="{{ url_for('static', filename='irrigation.js') }}"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database-compat.js"></script>
+    
     <style>
+        /* CSS Variables for consistent theming */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        /* Reset and base styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
+
         body {
-            
-             background: url("{{ url_for('static', filename='img.jpg') }}") no-repeat center center fixed;
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-position: center center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Layout */
+        .app {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
             align-items: center;
-            justify-content: flex-start;
-            padding: 30px;
-            color: #fff;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+            gap: 1rem;
         }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px 25px;
-            border-radius: 12px;
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
         }
-        h2 {
-            margin: 25px 0 15px;
-            text-align: center;
-            font-size: 1.8rem;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 10px 20px;
-            border-radius: 10px;
+
+        .logo i {
+            width: 2rem;
+            height: 2rem;
+            color: var(--success);
         }
-        .section {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            border-radius: 15px;
-            max-width: 500px;
+
+        .main {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
             width: 100%;
-            margin-bottom: 20px;
         }
-        form, .section {
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .recommendations-section {
+            grid-column: 1 / -1;
+            margin-top: 1rem;
+        }
+
+        /* Card styles */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .card-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .card-header i {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: var(--primary);
+        }
+
+        /* Weather section */
+        .weather-input {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .weather-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .weather-input input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--border-light);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Weather display */
+        .weather-location {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: var(--border-light);
+            border-radius: var(--radius-sm);
+        }
+
+        .weather-location i {
+            color: var(--primary);
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .weather-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--border-light);
+            border-radius: var(--radius-sm);
+        }
+
+        .weather-item i {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: var(--secondary);
+        }
+
+        .weather-item div p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .weather-item div span {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Sensor grid */
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sensor-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--border-light);
+            border-radius: var(--radius-sm);
+        }
+
+        .sensor-item i {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        .sensor-item div p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .sensor-item div span {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Status indicators */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-badge.connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.connecting {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Form styles */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 0.5rem;
         }
-        label {
-            font-weight: bold;
-            margin-bottom: 5px;
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
         }
-        input, select {
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
+
+        .form-group select,
+        .form-group input {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
             outline: none;
-            font-size: 1rem;
+            transition: border-color 0.2s;
         }
-        button, input[type="submit"] {
-            background: #28a745;
-            color: white;
-            padding: 12px;
+
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Recommendation display */
+        .recommendation-display {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .recommendation-display.success {
+            border-left: 4px solid var(--success);
+            background: #f0fdf4;
+        }
+
+        .recommendation-display.warning {
+            border-left: 4px solid var(--warning);
+            background: #fffbeb;
+        }
+
+        .recommendation-display.error {
+            border-left: 4px solid var(--error);
+            background: #fef2f2;
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .recommendation-header i {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: var(--primary);
+        }
+
+        .recommendation-info h3 {
             font-size: 1rem;
-            border: none;
-            border-radius: 8px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .recommendation-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0.25rem 0 0 0;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-secondary {
+            background: var(--border);
+            color: var(--text-secondary);
+        }
+
+        /* Control panel */
+        .control-panel {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .switch-container {
+            position: relative;
+            display: inline-block;
+            width: 3rem;
+            height: 1.5rem;
+        }
+
+        .switch {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-label {
+            position: absolute;
             cursor: pointer;
-            transition: 0.3s;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: 0.4s;
+            border-radius: 1rem;
         }
-        button:hover, input[type="submit"]:hover {
-            background: #218838;
+
+        .switch-label:before {
+            position: absolute;
+            content: "";
+            height: 1.125rem;
+            width: 1.125rem;
+            left: 0.1875rem;
+            bottom: 0.1875rem;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
         }
-        #weather-details {
-            margin-top: 15px;
+
+        .switch:checked + .switch-label {
+            background-color: var(--primary);
         }
+
+        .switch:checked + .switch-label:before {
+            transform: translateX(1.5rem);
+        }
+
+        /* Threshold display */
+        .threshold-display {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--border-light);
+            border-radius: var(--radius);
+            margin: 1rem 0;
+        }
+
+        .threshold-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .threshold-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Toast notifications */
+        #toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            min-width: 300px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.toast-success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.toast-error {
+            border-left: 4px solid var(--error);
+        }
+
+        .toast.toast-warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .toast.toast-info {
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .toast-message {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .toast-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        /* Utility classes */
         .hidden {
-            display: none;
+            display: none !important;
         }
-        form {
-            background: rgba(0, 0, 0, 0.55);
-            padding: 25px;
-            border-radius: 15px;
-            max-width: 600px;
-            width: 100%;
+
+        .text-success {
+            color: var(--success);
+        }
+
+        .text-warning {
+            color: var(--warning);
+        }
+
+        .text-error {
+            color: var(--error);
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main {
+                padding: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .weather-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sensor-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .weather-input {
+                flex-direction: column;
+            }
+        }
+
+        /* Icon colors */
+        .icon-temp { color: #f59e0b; }
+        .icon-humidity { color: #3b82f6; }
+        .icon-soil { color: #8b5cf6; }
+        .icon-water { color: #06b6d4; }
+
+        /* Status dot */
+        .status-dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+            background: var(--border);
+            display: inline-block;
+        }
+
+        .status-dot.active {
+            background: var(--success);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
         }
     </style>
 </head>
-<body >
-    
-    <h1>Agriculture Irrigation Advisor</h1>
-    <div class="section">
-        <label for="location">Enter Location (City Name):</label>
-        <input type="text" id="location" placeholder="e.g., London" />
-        <button onclick="getWeather()">Get Weather</button>
+        .toast.toast-error {
+            border-left: 4px solid #dc3545;
+        }
+        .toast.toast-success {
+            border-left: 4px solid #28a745;
+        }
+        .toast.toast-info {
+            border-left: 4px solid #17a2b8;
+        }
+        .toast.toast-warning {
+            border-left: 4px solid #ffc107;
+        }
+        .toast-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .toast-close {
+            background: none;
+            border: none;
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 5px;
+        }
 
-        <div id="weather-details" class="hidden">
-            <h3>Weather Information</h3>
-            <div id="weather-info"></div>
-        </div>
+        /* Recommendation Styles */
+        .recommendation-display {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .recommendation-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+        }
+
+        .recommendation-info {
+            flex: 1;
+        }
+
+        .recommendation-info h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .recommendation-info p {
+            margin: 5px 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-error { background: #f8d7da; color: #721c24; }
+        .badge-secondary { background: #e2e3e5; color: #383d41; }
+
+        .recommendation-display.success { border-left: 4px solid #28a745; }
+        .recommendation-display.warning { border-left: 4px solid #ffc107; }
+        .recommendation-display.error { border-left: 4px solid #dc3545; }
+        .recommendation-display.secondary { border-left: 4px solid #6c757d; }
+
+        /* Weather Location Styles */
+        .weather-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 6px;
+        }
+
+        .location-icon {
+            color: #4a90e2;
+            width: 20px;
+            height: 20px;
+        }
+
+        #weather-city {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div id="toast-container"></div>
+    
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <i data-lucide="sprout"></i>
+                    AgroTech
+                </a>
+                <div style="margin-left: auto;">
+                    <span id="connection-status" class="status-badge connecting">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid Layout -->
+        <main class="main-grid">
+            <!-- Left Column -->
+            <div class="left-column">
+                <!-- Weather Card -->
+                <div class="content-section weather-card">
+                    <div class="card-header">
+                        <h2><i data-lucide="cloud"></i> Weather Information</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="input-group">
+                            <div class="input-container">
+                                <label for="location">Location</label>
+                                <input type="text" id="location" placeholder="Enter city name (e.g., London)" />
+                            </div>
+                            <button id="weather-btn" onclick="fetchWeather()">Get Weather</button>
+                        </div>
+                        
+                        <div id="weather-display" class="weather-display hidden">
+                            <div class="weather-location">
+                                <i data-lucide="map-pin" class="location-icon"></i>
+                                <span id="weather-city">--</span>
+                            </div>
+                            <div class="weather-grid">
+                                <div class="weather-item">
+                                    <i data-lucide="thermometer"></i>
+                                    <div>
+                                        <p>Temperature</p>
+                                        <span id="weather-temp">--Â°C</span>
+                                    </div>
+                                </div>
+                                <div class="weather-item">
+                                    <i data-lucide="droplets"></i>
+                                    <div>
+                                        <p>Humidity</p>
+                                        <span id="weather-humidity">--%</span>
+                                    </div>
+                                </div>
+                                <div class="weather-item">
+                                    <i data-lucide="cloud"></i>
+                                    <div>
+                                        <p>Condition</p>
+                                        <span id="weather-condition">--</span>
+                                    </div>
+                                </div>
+                                <div class="weather-item">
+                                    <i data-lucide="cloud-rain"></i>
+                                    <div>
+                                        <p>Rainfall</p>
+                                        <span id="weather-rainfall">-- mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IoT Sensor Card -->
+                <div class="card sensor-card">
+                    <div class="card-header">
+                        <h2><i data-lucide="activity"></i> Live IoT Sensor Data</h2>
+                        <span id="connection-status" class="badge badge-warning">Connecting...</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="sensor-grid content-section">
+                            <div class="sensor-item">
+                                <i data-lucide="thermometer" class="icon-orange"></i>
+                                <div>
+                                    <p>Temperature</p>
+                                    <span id="sensor-temp">--Â°C</span>
+                                </div>
+                            </div>
+                            <div class="sensor-item">
+                                <i data-lucide="droplets" class="icon-blue"></i>
+                                <div>
+                                    <p>Humidity</p>
+                                    <span id="sensor-humidity">--%</span>
+                                </div>
+                            </div>
+                            <div class="sensor-item">
+                                <i data-lucide="gauge" class="icon-amber"></i>
+                                <div>
+                                    <p>Soil Moisture</p>
+                                    <span id="sensor-soil">--%</span>
+                                </div>
+                            </div>
+                            <div class="sensor-item">
+                                <i data-lucide="waves" class="icon-cyan"></i>
+                                <div>
+                                    <p>Water Level</p>
+                                    <span id="sensor-water">--%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pump-status">
+                            <div class="pump-indicator">
+                                <i data-lucide="activity"></i>
+                                <span>Pump Status</span>
+                            </div>
+                            <div class="status-display">
+                                <div id="pump-indicator" class="status-dot"></div>
+                                <span id="pump-text">OFF</span>
+                            </div>
+                        </div>
+                        
+                        <p class="sensor-note">These values auto-fill forms and update thresholds when connected.</p>
+                    </div>
+                </div>
+
+                <!-- Pump Control Card -->
+                <div class="content-section control-panel">
+                    <div class="card-header">
+                        <h2><i data-lucide="settings"></i> Pump Control</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="control-override">
+                            <div class="override-info">
+                                <i data-lucide="activity"></i>
+                                <div>
+                                    <label for="manual-override">Manual Override</label>
+                                    <p>Enable manual pump control</p>
+                                </div>
+                            </div>
+                            <div class="switch-container">
+                                <input type="checkbox" id="manual-override" class="switch" onchange="toggleManualOverride(this.checked)">
+                                <label for="manual-override" class="switch-label"></label>
+                            </div>
+                        </div>
+                        
+                        <div class="current-mode">
+                            <p>Current Mode</p>
+                            <span id="mode-display">Automatic</span>
+                        </div>
+                        
+                        <div class="pump-status-display">
+                            <div class="pump-status-indicator">
+                                <div id="pump-status-dot" class="status-dot"></div>
+                                <span>Pump is <span id="pump-status-text">OFF</span></span>
+                            </div>
+                            <p id="pump-status-desc">Irrigation is inactive</p>
+                        </div>
+                        
+                        <div class="control-buttons">
+                            <button id="pump-on-btn" class="btn btn-success" onclick="setPump(true)" disabled>
+                                <i data-lucide="power"></i> Turn ON
+                            </button>
+                            <button id="pump-off-btn" class="btn btn-outline" onclick="setPump(false)" disabled>
+                                <i data-lucide="power"></i> Turn OFF
+                            </button>
+                        </div>
+                        
+                        <div id="firebase-warning" class="warning-box">
+                            <p>Firebase connection required for pump control</p>
+                        </div>
+                        
+                        <!-- Email Notification Test -->
+                        <div class="email-test-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                            <h3 style="margin-bottom: 10px;">Email Notifications</h3>
+                            <p style="margin-bottom: 15px; color: #666;">Test the email notification system</p>
+                            <button onclick="testEmailNotification()" class="btn btn-outline">
+                                <i data-lucide="mail"></i> Send Test Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="right-column">
+                <!-- Crop Prediction Card -->
+                <div class="card prediction-card">
+                    <div class="card-header">
+                        <h2><i data-lucide="sprout"></i> Crop Growth Prediction</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="crop-select">Crop Type</label>
+                                <select id="crop-select" onchange="calculateThreshold()">
+                                    <option value="0">Ginger</option>
+                                    <option value="1">Large Cardamom</option>
+                                    <option value="2">Maize (corn)</option>
+                                    <option value="3">Paddy (rice)</option>
+                                    <option value="4">Turmeric</option>
+                                    <option value="5">Bananas</option>
+                                    <option value="6">Beans</option>
+                                    <option value="7">Cabbage</option>
+                                    <option value="8">Kiwi</option>
+                                    <option value="9">Mustard</option>
+                                    <option value="10">Orange</option>
+                                    <option value="11">Papaya</option>
+                                    <option value="12">Peas</option>
+                                    <option value="13">Potato</option>
+                                    <option value="14">Radish</option>
+                                    <option value="15">Soybeans</option>
+                                    <option value="16">Sweet Potato</option>
+                                    <option value="17">Tomato</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="soil-select">Soil Type</label>
+                                <select id="soil-select" onchange="calculateThreshold()">
+                                    <option value="0">Alluvial Soil</option>
+                                    <option value="1">Black Soil</option>
+                                    <option value="2">Chalky Soil</option>
+                                    <option value="3">Clay Soil</option>
+                                    <option value="4">Loam Soil</option>
+                                    <option value="5">Red Soil</option>
+                                    <option value="6">Sandy Soil</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="stage-select">Growth Stage</label>
+                                <select id="stage-select" onchange="calculateThreshold()">
+                                    <option value="0">Flowering</option>
+                                    <option value="1">Fruit/Grain/Bulb Formation</option>
+                                    <option value="2">Germination</option>
+                                    <option value="3">Harvest</option>
+                                    <option value="4">Maturation</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="current-moisture">Current Soil Moisture (%)</label>
+                                <input type="number" id="current-moisture" min="0" max="100" placeholder="Enter current moisture %" oninput="updateRecommendation()">
+                            </div>
+                        </div>
+                        
+                        <!-- Threshold Display -->
+                        <div class="threshold-display">
+                            <div class="threshold-header">
+                                <i data-lucide="calculator"></i>
+                                <h3>ðŸ’§ Optimal Moisture Threshold</h3>
+                            </div>
+                            <div class="threshold-value">
+                                <span id="threshold-value">--</span>%
+                            </div>
+                            <p class="threshold-description">
+                                Based on temperature (<span id="temp-display">--</span>Â°C), humidity (<span id="humidity-display">--</span>%), and crop requirements
+                            </p>
+                        </div>
+                        
+                        <!-- Moisture Comparison -->
+                        <div id="moisture-comparison" class="moisture-comparison hidden">
+                            <p id="moisture-status" class="status-message">--</p>
+                        </div>
+                        
+                        <!-- Rain Forecast -->
+                        <div class="rain-forecast">
+                            <div class="forecast-header">
+                                <i data-lucide="trending-up"></i>
+                                <h3>2-hour Rain Forecast</h3>
+                            </div>
+                            <div class="forecast-grid">
+                                <div>
+                                    <p>Chance of rain</p>
+                                    <span id="rain-chance">--%</span>
+                                </div>
+                                <div>
+                                    <p>Estimated rain</p>
+                                    <span id="rain-amount">-- mm</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <!-- Irrigation Recommendation Card -->
+                <div class="card recommendation-card">
+                    <div class="card-header">
+                        <h2><i data-lucide="droplets"></i> Irrigation Recommendation</h2>
+                    </div>
+                    <div class="card-content">
+                        <div id="recommendation-display" class="recommendation-display">
+                            <div class="recommendation-content">
+                                <div class="recommendation-header">
+                                    <i id="recommendation-icon" data-lucide="droplets"></i>
+                                    <div class="recommendation-info">
+                                        <h3 id="recommendation-title">Loading...</h3>
+                                        <p id="recommendation-description">Please wait while we analyze conditions...</p>
+                                    </div>
+                                    <span id="recommendation-badge" class="badge badge-secondary">LOADING</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Current Conditions Summary -->
+                        <div class="conditions-summary">
+                            <h4>Current Conditions</h4>
+                            <div class="conditions-grid">
+                                <div class="condition-item">
+                                    <p>Current Moisture</p>
+                                    <span id="current-moisture-display">--%</span>
+                                </div>
+                                <div class="condition-item">
+                                    <p>Target Threshold</p>
+                                    <span id="target-threshold-display">--%</span>
+                                </div>
+                                <div class="condition-item">
+                                    <p>Rain Chance</p>
+                                    <span id="rain-chance-display">--%</span>
+                                </div>
+                                <div class="condition-item">
+                                    <p>Expected Rain</p>
+                                    <span id="expected-rain-display">-- mm</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Water Level Warning -->
+                        <div id="water-level-warning" class="warning-box hidden">
+                            <i data-lucide="alert-triangle"></i>
+                            <div>
+                                <p>Low Water Level: <span id="water-level-percent">--%</span></p>
+                                <small>Check water source before irrigation</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <h2>Crop Growth Prediction</h2>
-   <form action="/predict" method="POST">
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
 
-    <label for="crop_id">Crop ID:</label>
-    <select id="crop_id" name="crop_id" required>
-        <option value="0">CARROT</option>
-        <option value="1">CHILLI</option>
-        <option value="2">POTATO</option>
-        <option value="3">TOMATO</option>
-        <option value="4">WHEAT</option>
-    </select>
-
-    <label for="soil_type">Soil Type:</label>
-    <select id="soil_type" name="soil_type" required>
-        <option value="0">Alluvial Soil</option>
-        <option value="1">Black Soil</option>
-        <option value="2">Chalky Soil</option>
-        <option value="3">Clay Soil</option>
-        <option value="4">Loam Soil</option>
-        <option value="5">Red Soil</option>
-        <option value="6">Sandy Soil</option>
-    </select>
-
-    <label for="seedling_stage">Seedling Stage:</label>
-    <select id="seedling_stage" name="seedling_stage" required>
-        <option value="0">Flowering</option>
-        <option value="1">Fruit/Grain/Bulb Formation</option>
-        <option value="2">Germination</option>
-        <option value="3">Harvest</option>
-        <option value="4">Maturation</option>
-    </select>
-
-    <label for="moisture">Moisture (integer):</label>
-    <input type="number" id="moisture" name="moisture" min="0" required>
-
-    <label for="temperature">Temperature (°C):</label>
-    <input type="number" id="temperature" name="temperature" step="0.1" required>
-
-    <label for="humidity">Humidity (%):</label>
-    <input type="number" id="humidity" name="humidity" step="0.1" required>
-
-    
-    <input type="hidden" id="rainfall" name="rainfall">
-
-    <input type="submit" value="Predict">
-</form>
-
-
-    <script>
-    const apiKey = 'f4ccd28ceb577a556911dfd947e0ab84';  
-
-    function getWeather() {
-        const location = document.getElementById('location').value;
-        if (!location) return alert('Please enter a location.');
-
-        fetch(`https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&units=metric`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('City not found or API error');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Default rainfall
-                let rainfall = 0;
-                if (data.rain) {
-                    if (data.rain['1h']) {
-                        rainfall = data.rain['1h'];
-                    } else if (data.rain['3h']) {
-                        rainfall = data.rain['3h'];
-                    }
-                }
-
-            
-                const weatherInfo = `
-                    Temperature: ${data.main.temp} °C<br>
-                    Humidity: ${data.main.humidity}%<br>
-                    Weather: ${data.weather[0].description}<br>
-                    Rainfall: ${rainfall} mm
-                `;
-                document.getElementById('weather-info').innerHTML = weatherInfo;
-                document.getElementById('weather-details').classList.remove('hidden');
-
-                // Store rainfall in hidden input
-                document.getElementById('rainfall').value = rainfall;
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Failed to fetch weather data. Please check the location.');
-            });
-    }
-</script>
-
+    <script src="{{ url_for('static', filename='prediction.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
