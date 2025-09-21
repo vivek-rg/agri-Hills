@@ -529,9 +529,12 @@ input:focus, select:focus {
 }
 
 #weather-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-lg);
-    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--accent) 100%);
+    border: 2px solid #87db9a !important;
+    background-color: #c6ddc6 !important;  /* ← NEW COLOR */
+    color: #75b97d !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(135, 219, 154, 0.3) !important;
+    transition: all 0.3s ease !important;
 }
 
 #weather-btn:active {
@@ -548,7 +551,7 @@ input:focus, select:focus {
 
 /* Add a weather icon to the button */
 #weather-btn::before {
-    content: 'ðŸŒ¤ï¸';
+    
     font-size: 1.1em;
     margin-right: 0.25rem;
 }

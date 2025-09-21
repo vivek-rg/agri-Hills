@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgroTech - Smart Irrigation Dashboard</title>
-    <meta name="description" content="Professional IoT-powered agriculture irrigation advisor with real-time monitoring and smart recommendations.">
+    <title>Agriculture Irrigation Advisor - Smart Farming Dashboard</title>
+    <meta name="description" content="Professional IoT-powered agriculture irrigation advisor. Get smart crop recommendations, real-time sensor monitoring, and automated irrigation control for optimal farming results.">
     
     <!-- SEO Meta Tags -->
-    <meta property="og:title" content="AgroTech - Smart Irrigation Dashboard">
-    <meta property="og:description" content="Professional IoT-powered agriculture irrigation advisor with real-time monitoring.">
+    <meta property="og:title" content="Agriculture Irrigation Advisor - Smart Farming Dashboard">
+    <meta property="og:description" content="Professional IoT-powered agriculture irrigation advisor with crop recommendations and automated irrigation control.">
     <meta property="og:type" content="website">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='agriculture-styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='recommendation-styles.css') }}">
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    
-    <!-- EmailJS SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     
     <!-- Custom Scripts -->
     <script src="{{ url_for('static', filename='recommendation.js') }}"></script>
@@ -26,642 +26,25 @@
     <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database-compat.js"></script>
     
     <style>
-        /* CSS Variables for consistent theming */
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --primary-light: #3b82f6;
-            --secondary: #64748b;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --background: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
-            --border-light: #f1f5f9;
-            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --radius: 12px;
-            --radius-sm: 8px;
-        }
-
-        /* Reset and base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--background);
-            color: var(--text-primary);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* Layout */
-        .app {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .logo i {
-            width: 2rem;
-            height: 2rem;
-            color: var(--success);
-        }
-
-        .main {
-            flex: 1;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            width: 100%;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .recommendations-section {
-            grid-column: 1 / -1;
-            margin-top: 1rem;
-        }
-
-        /* Card styles */
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            height: fit-content;
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .card-header h2 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        .card-header i {
-            width: 1.25rem;
-            height: 1.25rem;
-            color: var(--primary);
-        }
-
-        /* Weather section */
-        .weather-input {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .weather-input input {
-            flex: 1;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .weather-input input:focus {
-            border-color: var(--primary);
-        }
-
-        .btn {
-            padding: 0.75rem 1rem;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-secondary {
-            background: var(--border);
-            color: var(--text-primary);
-        }
-
-        .btn-secondary:hover {
-            background: var(--secondary);
-            color: white;
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #16a34a;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
-
-        .btn-outline:hover {
-            background: var(--border-light);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Weather display */
-        .weather-location {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            background: var(--border-light);
-            border-radius: var(--radius-sm);
-        }
-
-        .weather-location i {
-            color: var(--primary);
-            width: 1rem;
-            height: 1rem;
-        }
-
-        .weather-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .weather-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: var(--border-light);
-            border-radius: var(--radius-sm);
-        }
-
-        .weather-item i {
-            width: 1.25rem;
-            height: 1.25rem;
-            color: var(--secondary);
-        }
-
-        .weather-item div p {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin: 0;
-        }
-
-        .weather-item div span {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* Sensor grid */
-        .sensor-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .sensor-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem;
-            background: var(--border-light);
-            border-radius: var(--radius-sm);
-        }
-
-        .sensor-item i {
-            width: 1.5rem;
-            height: 1.5rem;
-        }
-
-        .sensor-item div p {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin: 0;
-        }
-
-        .sensor-item div span {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* Status indicators */
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .status-badge.connected {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-badge.connecting {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-badge.disconnected {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        /* Form styles */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group label {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .form-group select,
-        .form-group input {
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.875rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-group select:focus,
-        .form-group input:focus {
-            border-color: var(--primary);
-        }
-
-        /* Recommendation display */
-        .recommendation-display {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            margin-bottom: 1.5rem;
-        }
-
-        .recommendation-display.success {
-            border-left: 4px solid var(--success);
-            background: #f0fdf4;
-        }
-
-        .recommendation-display.warning {
-            border-left: 4px solid var(--warning);
-            background: #fffbeb;
-        }
-
-        .recommendation-display.error {
-            border-left: 4px solid var(--error);
-            background: #fef2f2;
-        }
-
-        .recommendation-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .recommendation-header i {
-            width: 1.5rem;
-            height: 1.5rem;
-            color: var(--primary);
-        }
-
-        .recommendation-info h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 0;
-            color: var(--text-primary);
-        }
-
-        .recommendation-info p {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin: 0.25rem 0 0 0;
-        }
-
-        .badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .badge-success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-warning {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge-error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .badge-secondary {
-            background: var(--border);
-            color: var(--text-secondary);
-        }
-
-        /* Control panel */
-        .control-panel {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-        }
-
-        .switch-container {
-            position: relative;
-            display: inline-block;
-            width: 3rem;
-            height: 1.5rem;
-        }
-
-        .switch {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .switch-label {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--border);
-            transition: 0.4s;
-            border-radius: 1rem;
-        }
-
-        .switch-label:before {
-            position: absolute;
-            content: "";
-            height: 1.125rem;
-            width: 1.125rem;
-            left: 0.1875rem;
-            bottom: 0.1875rem;
-            background-color: white;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
-
-        .switch:checked + .switch-label {
-            background-color: var(--primary);
-        }
-
-        .switch:checked + .switch-label:before {
-            transform: translateX(1.5rem);
-        }
-
-        /* Threshold display */
-        .threshold-display {
-            text-align: center;
-            padding: 1.5rem;
-            background: var(--border-light);
-            border-radius: var(--radius);
-            margin: 1rem 0;
-        }
-
-        .threshold-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin: 0.5rem 0;
-        }
-
-        .threshold-description {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin: 0;
-        }
-
-        /* Toast notifications */
         #toast-container {
             position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1000;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
         }
-
         .toast {
-            background: var(--surface);
-            border-radius: var(--radius-sm);
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border);
-            min-width: 300px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            padding: 15px;
             transform: translateX(120%);
             transition: transform 0.3s ease-in-out;
+            min-width: 300px;
         }
-
         .toast.show {
             transform: translateX(0);
         }
-
-        .toast.toast-success {
-            border-left: 4px solid var(--success);
-        }
-
-        .toast.toast-error {
-            border-left: 4px solid var(--error);
-        }
-
-        .toast.toast-warning {
-            border-left: 4px solid var(--warning);
-        }
-
-        .toast.toast-info {
-            border-left: 4px solid var(--primary);
-        }
-
-        .toast-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .toast-message {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        .toast-close {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-        }
-
-        /* Utility classes */
-        .hidden {
-            display: none !important;
-        }
-
-        .text-success {
-            color: var(--success);
-        }
-
-        .text-warning {
-            color: var(--warning);
-        }
-
-        .text-error {
-            color: var(--error);
-        }
-
-        /* Responsive design */
-        @media (max-width: 1024px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main {
-                padding: 1rem;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .weather-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .sensor-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .weather-input {
-                flex-direction: column;
-            }
-        }
-
-        /* Icon colors */
-        .icon-temp { color: #f59e0b; }
-        .icon-humidity { color: #3b82f6; }
-        .icon-soil { color: #8b5cf6; }
-        .icon-water { color: #06b6d4; }
-
-        /* Status dot */
-        .status-dot {
-            width: 0.75rem;
-            height: 0.75rem;
-            border-radius: 50%;
-            background: var(--border);
-            display: inline-block;
-        }
-
-        .status-dot.active {
-            background: var(--success);
-            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-        }
-    </style>
-</head>
         .toast.toast-error {
             border-left: 4px solid #dc3545;
         }
@@ -765,22 +148,33 @@
             font-weight: 500;
             color: #2c3e50;
         }
+
+        /* Fix corrupted weather button icon */
+        #weather-btn::before {
+            content: none !important;
+        }
+        #weather-btn:hover {
+            border: 2px solid #87db9a !important;
+            background-color: #75b97d !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(135, 219, 154, 0.3) !important;
+            transition: all 0.3s ease !important;
+        }
     </style>
 </head>
 <body>
     <div id="toast-container"></div>
-    
-    <div class="app">
+    <div class="container">
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <a href="#" class="logo">
+                <div class="header-icons">
                     <i data-lucide="sprout"></i>
-                    AgroTech
-                </a>
-                <div style="margin-left: auto;">
-                    <span id="connection-status" class="status-badge connecting">Connecting...</span>
+                    <i data-lucide="droplets"></i>
                 </div>
+                <h1>Agriculture Irrigation Advisor</h1>
+                <p>Smart irrigation decisions powered by real-time data</p>
             </div>
         </header>
 
@@ -799,7 +193,9 @@
                                 <label for="location">Location</label>
                                 <input type="text" id="location" placeholder="Enter city name (e.g., London)" />
                             </div>
-                            <button id="weather-btn" onclick="fetchWeather()">Get Weather</button>
+                            <button id="weather-btn" onclick="fetchWeather()">
+                                <i data-lucide="cloud-sun"></i> Get Weather
+                            </button>
                         </div>
                         
                         <div id="weather-display" class="weather-display hidden">
@@ -894,59 +290,55 @@
                     </div>
                 </div>
 
-                <!-- Pump Control Card -->
-                <div class="content-section control-panel">
+                <!-- Irrigation Recommendation Card -->
+                <div class="card recommendation-card">
                     <div class="card-header">
-                        <h2><i data-lucide="settings"></i> Pump Control</h2>
+                        <h2><i data-lucide="droplets"></i> Irrigation Recommendation</h2>
                     </div>
                     <div class="card-content">
-                        <div class="control-override">
-                            <div class="override-info">
-                                <i data-lucide="activity"></i>
-                                <div>
-                                    <label for="manual-override">Manual Override</label>
-                                    <p>Enable manual pump control</p>
+                        <div id="recommendation-display" class="recommendation-display">
+                            <div class="recommendation-content">
+                                <div class="recommendation-header">
+                                    <i id="recommendation-icon" data-lucide="droplets"></i>
+                                    <div class="recommendation-info">
+                                        <h3 id="recommendation-title">Loading...</h3>
+                                        <p id="recommendation-description">Please wait while we analyze conditions...</p>
+                                    </div>
+                                    <span id="recommendation-badge" class="badge badge-secondary">LOADING</span>
                                 </div>
                             </div>
-                            <div class="switch-container">
-                                <input type="checkbox" id="manual-override" class="switch" onchange="toggleManualOverride(this.checked)">
-                                <label for="manual-override" class="switch-label"></label>
+                        </div>
+                        
+                        <!-- Current Conditions Summary -->
+                        <div class="conditions-summary">
+                            <h4>Current Conditions</h4>
+                            <div class="conditions-grid">
+                                <div class="condition-item">
+                                    <p>Current Moisture</p>
+                                    <span id="current-moisture-display">--%</span>
+                                </div>
+                                <div class="condition-item">
+                                    <p>Target Threshold</p>
+                                    <span id="target-threshold-display">--%</span>
+                                </div>
+                                <div class="condition-item">
+                                    <p>Rain Chance</p>
+                                    <span id="rain-chance-display">--%</span>
+                                </div>
+                                <div class="condition-item">
+                                    <p>Expected Rain</p>
+                                    <span id="expected-rain-display">-- mm</span>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="current-mode">
-                            <p>Current Mode</p>
-                            <span id="mode-display">Automatic</span>
-                        </div>
-                        
-                        <div class="pump-status-display">
-                            <div class="pump-status-indicator">
-                                <div id="pump-status-dot" class="status-dot"></div>
-                                <span>Pump is <span id="pump-status-text">OFF</span></span>
+                        <!-- Water Level Warning -->
+                        <div id="water-level-warning" class="warning-box hidden">
+                            <i data-lucide="alert-triangle"></i>
+                            <div>
+                                <p>Low Water Level: <span id="water-level-percent">--%</span></p>
+                                <small>Check water source before irrigation</small>
                             </div>
-                            <p id="pump-status-desc">Irrigation is inactive</p>
-                        </div>
-                        
-                        <div class="control-buttons">
-                            <button id="pump-on-btn" class="btn btn-success" onclick="setPump(true)" disabled>
-                                <i data-lucide="power"></i> Turn ON
-                            </button>
-                            <button id="pump-off-btn" class="btn btn-outline" onclick="setPump(false)" disabled>
-                                <i data-lucide="power"></i> Turn OFF
-                            </button>
-                        </div>
-                        
-                        <div id="firebase-warning" class="warning-box">
-                            <p>Firebase connection required for pump control</p>
-                        </div>
-                        
-                        <!-- Email Notification Test -->
-                        <div class="email-test-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
-                            <h3 style="margin-bottom: 10px;">Email Notifications</h3>
-                            <p style="margin-bottom: 15px; color: #666;">Test the email notification system</p>
-                            <button onclick="testEmailNotification()" class="btn btn-outline">
-                                <i data-lucide="mail"></i> Send Test Email
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -1019,7 +411,7 @@
                         <div class="threshold-display">
                             <div class="threshold-header">
                                 <i data-lucide="calculator"></i>
-                                <h3>ðŸ’§ Optimal Moisture Threshold</h3>
+                                <h3> Optimal Moisture Threshold</h3>
                             </div>
                             <div class="threshold-value">
                                 <span id="threshold-value">--</span>%
@@ -1055,55 +447,50 @@
                     </div>
                 </div>
 
-                <!-- Irrigation Recommendation Card -->
-                <div class="card recommendation-card">
+                <!-- Pump Control Card -->
+                <div class="content-section control-panel">
                     <div class="card-header">
-                        <h2><i data-lucide="droplets"></i> Irrigation Recommendation</h2>
+                        <h2><i data-lucide="settings"></i> Pump Control</h2>
                     </div>
                     <div class="card-content">
-                        <div id="recommendation-display" class="recommendation-display">
-                            <div class="recommendation-content">
-                                <div class="recommendation-header">
-                                    <i id="recommendation-icon" data-lucide="droplets"></i>
-                                    <div class="recommendation-info">
-                                        <h3 id="recommendation-title">Loading...</h3>
-                                        <p id="recommendation-description">Please wait while we analyze conditions...</p>
-                                    </div>
-                                    <span id="recommendation-badge" class="badge badge-secondary">LOADING</span>
+                        <div class="control-override">
+                            <div class="override-info">
+                                <i data-lucide="activity"></i>
+                                <div>
+                                    <label for="manual-override">Manual Override</label>
+                                    <p>Enable manual pump control</p>
                                 </div>
+                            </div>
+                            <div class="switch-container">
+                                <input type="checkbox" id="manual-override" class="switch" onchange="toggleManualOverride(this.checked)">
+                                <label for="manual-override" class="switch-label"></label>
                             </div>
                         </div>
                         
-                        <!-- Current Conditions Summary -->
-                        <div class="conditions-summary">
-                            <h4>Current Conditions</h4>
-                            <div class="conditions-grid">
-                                <div class="condition-item">
-                                    <p>Current Moisture</p>
-                                    <span id="current-moisture-display">--%</span>
-                                </div>
-                                <div class="condition-item">
-                                    <p>Target Threshold</p>
-                                    <span id="target-threshold-display">--%</span>
-                                </div>
-                                <div class="condition-item">
-                                    <p>Rain Chance</p>
-                                    <span id="rain-chance-display">--%</span>
-                                </div>
-                                <div class="condition-item">
-                                    <p>Expected Rain</p>
-                                    <span id="expected-rain-display">-- mm</span>
-                                </div>
-                            </div>
+                        <div class="current-mode">
+                            <p>Current Mode</p>
+                            <span id="mode-display">Automatic</span>
                         </div>
                         
-                        <!-- Water Level Warning -->
-                        <div id="water-level-warning" class="warning-box hidden">
-                            <i data-lucide="alert-triangle"></i>
-                            <div>
-                                <p>Low Water Level: <span id="water-level-percent">--%</span></p>
-                                <small>Check water source before irrigation</small>
+                        <div class="pump-status-display">
+                            <div class="pump-status-indicator">
+                                <div id="pump-status-dot" class="status-dot"></div>
+                                <span>Pump is <span id="pump-status-text">OFF</span></span>
                             </div>
+                            <p id="pump-status-desc">Irrigation is inactive</p>
+                        </div>
+                        
+                        <div class="control-buttons">
+                            <button id="pump-on-btn" class="btn btn-success" onclick="setPump(true)" disabled>
+                                <i data-lucide="power"></i> Turn ON
+                            </button>
+                            <button id="pump-off-btn" class="btn btn-outline" onclick="setPump(false)" disabled>
+                                <i data-lucide="power"></i> Turn OFF
+                            </button>
+                        </div>
+                        
+                        <div id="firebase-warning" class="warning-box">
+                            <p>Firebase connection required for pump control</p>
                         </div>
                     </div>
                 </div>

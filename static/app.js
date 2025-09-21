@@ -87,55 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateThreshold();
     updateRecommendation();
     
-    // Initialize EmailJS
-    emailjs.init("_WD0L7J3K1dVgSx4P"); // EmailJS public key
-    
-    // Get the last email sent time from localStorage or set to 0
-    let lastEmailSent = parseInt(localStorage.getItem('lastEmailSent')) || 0;
-    const EMAIL_COOLDOWN = 3600000; // 1 hour in milliseconds
-    
-    // Set up water level monitoring and automatic email notifications
-    function checkWaterLevelAndNotify() {
-        if (sensorData.waterLevelPercent < 25) {
-            // Show warning in UI
-            document.getElementById('water-level-warning').classList.remove('hidden');
-            document.getElementById('water-level-percent').textContent = `${sensorData.waterLevelPercent}%`;
-            
-            // Check if enough time has passed since last email
-            const now = Date.now();
-            if (now - lastEmailSent >= EMAIL_COOLDOWN) {
-                console.log('Sending low water level notification email...');
-                // Send email notification
-                emailjs.send("service_g85agf8", "template_w32qufb", {
-                    to_email: "vivek1237777@gmail.com", // Configured email address
-                    water_level: sensorData.waterLevelPercent.toFixed(1),
-                    location: document.getElementById('location').value || "your farm",
-                    timestamp: new Date().toLocaleString()
-                }).then(
-                    function(response) {
-                        console.log("Email sent successfully:", response);
-                        // Update last email sent time in memory and localStorage
-                        lastEmailSent = now;
-                        localStorage.setItem('lastEmailSent', now.toString());
-                        showToast('Alert Sent', 'Low water level notification has been sent.', 'info');
-                    },
-                    function(error) {
-                        console.error("Email sending failed:", error);
-                        showToast('Error', 'Failed to send email notification.', 'error');
-                    }
-                );
-            }
-        } else {
-            document.getElementById('water-level-warning').classList.add('hidden');
-        }
-    }
-    
-    // Set up periodic checks for water level
-    setInterval(checkWaterLevelAndNotify, 30000); // Check every 30 seconds
-    
-    // Run initial check
-    checkWaterLevelAndNotify();
-    
     // Set up Firebase connection monitoring
     const connectedRef = database.ref('.info/connected');
     connectedRef.on('value', (snap) => {
@@ -527,23 +478,3 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loc) loc.addEventListener('keypress', e => { if (e.key === 'Enter') fetchWeather(); });
 });
 
-// Test function for email notifications
-function testEmailNotification() {
-    showToast('Test', 'Sending test email notification...', 'info');
-    
-    emailjs.send("service_g85agf8", "template_w32qufb", {
-        to_email: "vivek1237777@gmail.com",
-        water_level: "20.0", // Test with low water level
-        location: "Test Location",
-        timestamp: new Date().toLocaleString()
-    }).then(
-        function(response) {
-            console.log("Test email sent successfully:", response);
-            showToast('Success', 'Test email was sent successfully! Check your inbox.', 'success');
-        },
-        function(error) {
-            console.error("Test email failed:", error);
-            showToast('Error', 'Failed to send test email: ' + error.text, 'error');
-        }
-    );
-}
